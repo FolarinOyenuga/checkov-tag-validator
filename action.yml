@@ -1,0 +1,87 @@
+name: 'Checkov Tag Validator'
+description: 'Validates Terraform resources have required tags using Checkov'
+author: 'Ministry of Justice'
+
+branding:
+  icon: 'check-circle'
+  color: 'purple'
+
+inputs:
+  terraform_directory:
+    description: 'Path to Terraform files'
+    required: true
+    default: '.'
+  required_tags:
+    description: 'List of required tag keys (newline or comma-separated)'
+    required: true
+    default: |
+      business-unit
+      application
+      owner
+      is-production
+      service-area
+      environment-name
+  framework:
+    description: 'Checkov framework to use'
+    required: false
+    default: 'terraform'
+  soft_fail:
+    description: 'Return exit code 0 even if violations found'
+    required: false
+    default: 'false'
+
+outputs:
+  violations_count:
+    description: 'Number of tag violations found'
+    value: ${{ steps.parse.outputs.violations_count }}
+  violations_summary:
+    description: 'Markdown summary of violations for PR comments'
+    value: ${{ steps.parse.outputs.violations_summary }}
+  passed:
+    description: 'Whether validation passed (true/false)'
+    value: ${{ steps.parse.outputs.passed }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Checkov
+      shell: bash
+      run: pip install checkov
+
+    - name: Generate Checkov config
+      shell: bash
+      env:
+        REQUIRED_TAGS: ${{ inputs.required_tags }}
+      run: |
+        python3 ${{ github.action_path }}/scripts/generate_config.py
+
+    - name: Run Checkov
+      id: checkov
+      shell: bash
+      working-directory: ${{ inputs.terraform_directory }}
+      run: |
+        set +e
+        checkov -d . \
+          --framework ${{ inputs.framework }} \
+          --external-checks-dir ${{ github.action_path }}/policies \
+          --output cli \
+          --output json \
+          --output-file-path . \
+          2>&1 | tee checkov_output.txt
+        CHECKOV_EXIT=$?
+        echo "exit_code=$CHECKOV_EXIT" >> $GITHUB_OUTPUT
+        set -e
+
+    - name: Parse results
+      id: parse
+      shell: bash
+      env:
+        TERRAFORM_DIR: ${{ inputs.terraform_directory }}
+        SOFT_FAIL: ${{ inputs.soft_fail }}
+      run: |
+        python3 ${{ github.action_path }}/scripts/parse_results.py
