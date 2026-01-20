@@ -80,10 +80,10 @@ If not specified, the following MoJ tags are required:
 
 ## Features
 
-- **Dynamic resource detection** - Checks all taggable AWS resources
-- **tags_all support** - Works with AWS provider v3.38.0+ default_tags
-- **Configurable** - Specify your own required tags
-- **PR comments** - Easy integration with GitHub PR workflows
+- **Dynamic resource detection:** Checks all taggable AWS resources
+- **tags_all support:** Works with AWS provider v3.38.0+ default_tags
+- **Configurable:** Specify your own required tags
+- **PR comments:** Easy integration with GitHub PR workflows
 
 ## License
 
