@@ -32,7 +32,7 @@ jobs:
             owner
             is-production
             service-area
-            environment-name
+            environment
 
       # Optional: Post results as PR comment
       - name: Post Validation Results
@@ -76,7 +76,7 @@ If not specified, the following MoJ tags are required:
 - `owner`
 - `is-production`
 - `service-area`
-- `environment-name`
+- `environment`
 
 ## Features
 

@@ -20,7 +20,7 @@ inputs:
       owner
       is-production
       service-area
-      environment-name
+      environment
   framework:
     description: 'Checkov framework to use'
     required: false

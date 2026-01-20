@@ -22,7 +22,7 @@ def load_required_tags():
             'owner',
             'is-production',
             'service-area',
-            'environment-name'
+            'environment'
         ]
 
 
