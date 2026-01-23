@@ -25,11 +25,20 @@ def main():
             # Parse failed checks
             for check_type in results.get('results', {}).get('failed_checks', []):
                 if 'CKV_AWS_TAG' in check_type.get('check_id', ''):
+                    # Get file location details
+                    file_path = check_type.get('file_path', 'Unknown')
+                    file_line_range = check_type.get('file_line_range', [0, 0])
+                    start_line = file_line_range[0] if file_line_range else 0
+                    end_line = file_line_range[1] if len(file_line_range) > 1 else start_line
+                    
                     violations.append({
                         'resource': check_type.get('resource', 'Unknown'),
-                        'file': check_type.get('file_path', 'Unknown'),
+                        'file': file_path,
+                        'start_line': start_line,
+                        'end_line': end_line,
                         'check': check_type.get('check_id', 'Unknown'),
-                        'message': check_type.get('check_name', 'Missing required tags')
+                        'message': check_type.get('check_name', 'Missing required tags'),
+                        'details': check_type.get('check_result', {}).get('evaluated_keys', [])
                     })
         except Exception as e:
             print(f"Warning: Could not parse {json_file}: {e}")
@@ -44,8 +53,13 @@ def main():
     else:
         summary_lines.append(f"❌ **Found {violations_count} tag violation(s)**\n")
         for v in violations:
-            summary_lines.append(f"- **{v['resource']}** ({v['file']})")
-            summary_lines.append(f"  - {v['message']}")
+            # Format: resource (file:line-line)
+            location = f"{v['file']}:{v['start_line']}"
+            if v['end_line'] != v['start_line']:
+                location = f"{v['file']}:{v['start_line']}-{v['end_line']}"
+            summary_lines.append(f"- **{v['resource']}**")
+            summary_lines.append(f"  - 📁 `{location}`")
+            summary_lines.append(f"  - ❌ {v['message']}")
     
     summary = '\n'.join(summary_lines)
     
