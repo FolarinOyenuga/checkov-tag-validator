@@ -53,12 +53,20 @@ def main():
     else:
         summary_lines.append(f"❌ **Found {violations_count} tag violation(s)**\n")
         for v in violations:
-            # Format: resource (file:line-line)
-            location = f"{v['file']}:{v['start_line']}"
-            if v['end_line'] != v['start_line']:
-                location = f"{v['file']}:{v['start_line']}-{v['end_line']}"
-            summary_lines.append(f"- **{v['resource']}**")
-            summary_lines.append(f"  - 📁 `{location}`")
+            resource = v['resource']
+            # Provide hint about source location based on resource address
+            if resource.startswith('module.'):
+                # Module resource - suggest looking in module directory
+                module_name = resource.split('.')[1]
+                hint = f"Check `modules/{module_name}/` for this resource"
+            else:
+                # Direct resource - suggest grepping for resource name
+                resource_type = resource.split('.')[0] if '.' in resource else resource
+                resource_name = resource.split('.')[1] if '.' in resource else resource
+                hint = f"Search: `grep -r '{resource_name}' *.tf`"
+            
+            summary_lines.append(f"- **{resource}**")
+            summary_lines.append(f"  - 💡 {hint}")
             summary_lines.append(f"  - ❌ {v['message']}")
     
     summary = '\n'.join(summary_lines)
