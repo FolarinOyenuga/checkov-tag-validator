@@ -53,6 +53,24 @@ runs:
       shell: bash
       run: pip install checkov
 
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_wrapper: false
+
+    - name: Generate Terraform plan
+      id: plan
+      shell: bash
+      working-directory: ${{ inputs.terraform_directory }}
+      run: |
+        echo "🔧 Initializing Terraform..."
+        terraform init -backend=false
+        echo "📝 Generating Terraform plan..."
+        terraform plan -out=tfplan.binary
+        echo "🔄 Converting plan to JSON..."
+        terraform show -json tfplan.binary > tfplan.json
+        echo "✅ Plan generated successfully"
+
     - name: Generate Checkov config
       shell: bash
       env:
@@ -60,14 +78,15 @@ runs:
       run: |
         python3 ${{ github.action_path }}/scripts/generate_config.py
 
-    - name: Run Checkov
+    - name: Run Checkov on plan
       id: checkov
       shell: bash
       working-directory: ${{ inputs.terraform_directory }}
       run: |
         set +e
-        checkov -d . \
-          --framework ${{ inputs.framework }} \
+        # Use terraform_plan framework to scan plan JSON (sees tags_all and module resources)
+        checkov -f tfplan.json \
+          --framework terraform_plan \
           --external-checks-dir ${{ github.action_path }}/policies \
           --output cli \
           --output json \
