@@ -56,14 +56,13 @@ def main():
             resource = v['resource']
             # Provide hint about source location based on resource address
             if resource.startswith('module.'):
-                # Module resource - suggest looking in module directory
+                # Module resource - point to module directory
                 module_name = resource.split('.')[1]
-                hint = f"Check `modules/{module_name}/` for this resource"
+                hint = f"Check `modules/{module_name}/`"
             else:
-                # Direct resource - suggest grepping for resource name
-                resource_type = resource.split('.')[0] if '.' in resource else resource
+                # Direct resource - point to resource definition
                 resource_name = resource.split('.')[1] if '.' in resource else resource
-                hint = f"Search: `grep -r '{resource_name}' *.tf`"
+                hint = f"Look for `resource ... \"{resource_name}\"`"
             
             summary_lines.append(f"- **{resource}**")
             summary_lines.append(f"  - 💡 {hint}")
