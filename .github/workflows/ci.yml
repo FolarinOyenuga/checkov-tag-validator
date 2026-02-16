@@ -130,3 +130,113 @@ jobs:
             exit 1
           fi
           echo "✅ Non-compliant resources correctly detected"
+
+      - name: Create test Terraform (whitespace tags)
+        run: |
+          mkdir -p test-terraform/whitespace
+          cat > test-terraform/whitespace/main.tf << 'EOF'
+          terraform {
+            required_providers {
+              aws = {
+                source  = "hashicorp/aws"
+                version = "~> 5.0"
+              }
+            }
+          }
+
+          provider "aws" {
+            region = "eu-west-2"
+            skip_credentials_validation = true
+            skip_metadata_api_check     = true
+            skip_requesting_account_id  = true
+            access_key                  = "mock"
+            secret_key                  = "mock"
+          }
+
+          resource "aws_s3_bucket" "whitespace_tags" {
+            bucket = "test-bucket-whitespace-tags"
+
+            tags = {
+              business-unit = "   "
+              application   = "test-app"
+              owner         = "  "
+              is-production = "false"
+              service-area  = "testing"
+              environment   = "development"
+            }
+          }
+          EOF
+
+      - name: Test whitespace tags fail
+        id: whitespace
+        uses: ./
+        continue-on-error: true
+        with:
+          terraform_directory: test-terraform/whitespace
+          required_tags: |
+            business-unit
+            application
+            owner
+
+      - name: Verify whitespace tags detected
+        run: |
+          if [ "${{ steps.whitespace.outputs.passed }}" = "true" ]; then
+            echo "ERROR: Whitespace-only tags should have failed"
+            exit 1
+          fi
+          echo "✅ Whitespace-only tags correctly detected"
+
+      - name: Create test Terraform (empty tags)
+        run: |
+          mkdir -p test-terraform/empty
+          cat > test-terraform/empty/main.tf << 'EOF'
+          terraform {
+            required_providers {
+              aws = {
+                source  = "hashicorp/aws"
+                version = "~> 5.0"
+              }
+            }
+          }
+
+          provider "aws" {
+            region = "eu-west-2"
+            skip_credentials_validation = true
+            skip_metadata_api_check     = true
+            skip_requesting_account_id  = true
+            access_key                  = "mock"
+            secret_key                  = "mock"
+          }
+
+          resource "aws_s3_bucket" "empty_tags" {
+            bucket = "test-bucket-empty-tags"
+
+            tags = {
+              business-unit = ""
+              application   = "test-app"
+              owner         = ""
+              is-production = "false"
+              service-area  = "testing"
+              environment   = "development"
+            }
+          }
+          EOF
+
+      - name: Test empty tags fail
+        id: empty
+        uses: ./
+        continue-on-error: true
+        with:
+          terraform_directory: test-terraform/empty
+          required_tags: |
+            business-unit
+            application
+            owner
+
+      - name: Verify empty tags detected
+        run: |
+          if [ "${{ steps.empty.outputs.passed }}" = "true" ]; then
+            echo "ERROR: Empty tags should have failed"
+            exit 1
+          fi
+          echo "✅ Empty tags correctly detected"
