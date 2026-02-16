@@ -68,6 +68,10 @@ class RequiredTagsPlanCheck(BaseResourceCheck):
         if not isinstance(effective_tags, dict):
             effective_tags = {}
 
+        # Debug: print what we're checking
+        import sys
+        print(f"DEBUG: Checking tags for resource, effective_tags={effective_tags}", file=sys.stderr)
+
         # Check for missing or empty tags
         missing = []
         for tag in REQUIRED_TAGS:
