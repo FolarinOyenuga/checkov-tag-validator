@@ -73,8 +73,22 @@ class RequiredTagsPlanCheck(BaseResourceCheck):
         for tag in REQUIRED_TAGS:
             if tag not in effective_tags:
                 missing.append(tag)
-            elif not effective_tags[tag] or str(effective_tags[tag]).strip() == "":
-                missing.append(f"{tag} (empty)")
+            else:
+                # Get tag value - Checkov wraps values in lists, so extract first element
+                tag_value = effective_tags[tag]
+                if isinstance(tag_value, list):
+                    tag_value = tag_value[0] if tag_value else None
+
+                # Handle None, empty string, or whitespace-only values
+                if tag_value is None:
+                    missing.append(f"{tag} (empty)")
+                elif isinstance(tag_value, str) and tag_value.strip() == "":
+                    missing.append(f"{tag} (empty)")
+                elif isinstance(tag_value, bool):
+                    # Boolean values like False are valid tags
+                    pass
+                elif not tag_value:
+                    missing.append(f"{tag} (empty)")
 
         if missing:
             self.details = f"Missing tags: {', '.join(missing)}"
