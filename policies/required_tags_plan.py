@@ -2,6 +2,7 @@
 Custom Checkov policy to validate required tags on AWS resources in Terraform plan.
 This policy works with terraform_plan framework to see tags_all and module-created resources.
 """
+
 import json
 import os
 
@@ -11,21 +12,14 @@ from checkov.terraform.checks.resource.base_resource_check import BaseResourceCh
 
 def load_required_tags():
     """Load required tags from config file."""
-    config_path = os.path.join(os.path.dirname(__file__), '..', 'config.json')
+    config_path = os.path.join(os.path.dirname(__file__), "..", "config.json")
     try:
         with open(config_path) as f:
             config = json.load(f)
-            return config.get('required_tags', [])
+            return config.get("required_tags", [])
     except Exception:
         # Default MoJ tags
-        return [
-            'business-unit',
-            'application',
-            'owner',
-            'is-production',
-            'service-area',
-            'environment'
-        ]
+        return ["business-unit", "application", "owner", "is-production", "service-area", "environment"]
 
 
 REQUIRED_TAGS = load_required_tags()
@@ -35,7 +29,7 @@ class RequiredTagsPlanCheck(BaseResourceCheck):
     def __init__(self):
         name = "Ensure resource has all required tags"
         id = "CKV_AWS_TAG_001"
-        supported_resources = ['*']
+        supported_resources = ["*"]
         categories = [CheckCategories.GENERAL_SECURITY]
         super().__init__(name=name, id=id, categories=categories, supported_resources=supported_resources)
 
@@ -55,8 +49,8 @@ class RequiredTagsPlanCheck(BaseResourceCheck):
 
         # Direct tags attribute
         if isinstance(conf, dict):
-            tags = conf.get('tags')
-            tags_all = conf.get('tags_all')
+            tags = conf.get("tags")
+            tags_all = conf.get("tags_all")
 
         # Handle list format from Checkov static scanning
         if isinstance(tags, list) and tags:
@@ -79,7 +73,7 @@ class RequiredTagsPlanCheck(BaseResourceCheck):
         for tag in REQUIRED_TAGS:
             if tag not in effective_tags:
                 missing.append(tag)
-            elif not effective_tags[tag] or str(effective_tags[tag]).strip() == '':
+            elif not effective_tags[tag] or str(effective_tags[tag]).strip() == "":
                 missing.append(f"{tag} (empty)")
 
         if missing:

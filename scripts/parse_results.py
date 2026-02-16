@@ -2,18 +2,19 @@
 """
 Parses Checkov JSON output and generates GitHub Action outputs.
 """
+
 import glob
 import json
 import os
 
 
 def main():
-    terraform_dir = os.environ.get('TERRAFORM_DIR', '.')
-    soft_fail = os.environ.get('SOFT_FAIL', 'false').lower() == 'true'
-    github_output = os.environ.get('GITHUB_OUTPUT', '')
+    terraform_dir = os.environ.get("TERRAFORM_DIR", ".")
+    soft_fail = os.environ.get("SOFT_FAIL", "false").lower() == "true"
+    github_output = os.environ.get("GITHUB_OUTPUT", "")
 
     # Find Checkov JSON output
-    json_files = glob.glob(os.path.join(terraform_dir, 'results_*.json'))
+    json_files = glob.glob(os.path.join(terraform_dir, "results_*.json"))
 
     violations = []
 
@@ -23,23 +24,25 @@ def main():
                 results = json.load(f)
 
             # Parse failed checks
-            for check_type in results.get('results', {}).get('failed_checks', []):
-                if 'CKV_AWS_TAG' in check_type.get('check_id', ''):
+            for check_type in results.get("results", {}).get("failed_checks", []):
+                if "CKV_AWS_TAG" in check_type.get("check_id", ""):
                     # Get file location details
-                    file_path = check_type.get('file_path', 'Unknown')
-                    file_line_range = check_type.get('file_line_range', [0, 0])
+                    file_path = check_type.get("file_path", "Unknown")
+                    file_line_range = check_type.get("file_line_range", [0, 0])
                     start_line = file_line_range[0] if file_line_range else 0
                     end_line = file_line_range[1] if len(file_line_range) > 1 else start_line
 
-                    violations.append({
-                        'resource': check_type.get('resource', 'Unknown'),
-                        'file': file_path,
-                        'start_line': start_line,
-                        'end_line': end_line,
-                        'check': check_type.get('check_id', 'Unknown'),
-                        'message': check_type.get('check_name', 'Missing required tags'),
-                        'details': check_type.get('check_result', {}).get('evaluated_keys', [])
-                    })
+                    violations.append(
+                        {
+                            "resource": check_type.get("resource", "Unknown"),
+                            "file": file_path,
+                            "start_line": start_line,
+                            "end_line": end_line,
+                            "check": check_type.get("check_id", "Unknown"),
+                            "message": check_type.get("check_name", "Missing required tags"),
+                            "details": check_type.get("check_result", {}).get("evaluated_keys", []),
+                        }
+                    )
         except Exception as e:
             print(f"Warning: Could not parse {json_file}: {e}")
 
@@ -53,22 +56,22 @@ def main():
     else:
         summary_lines.append(f"❌ **Found {violations_count} tag violation(s)**\n")
         for v in violations:
-            resource = v['resource']
+            resource = v["resource"]
             # Provide hint about source location based on resource address
-            if resource.startswith('module.'):
+            if resource.startswith("module."):
                 # Module resource - point to module directory
-                module_name = resource.split('.')[1]
+                module_name = resource.split(".")[1]
                 hint = f"Check `modules/{module_name}/`"
             else:
                 # Direct resource - point to resource definition
-                resource_name = resource.split('.')[1] if '.' in resource else resource
-                hint = f"Look for `resource ... \"{resource_name}\"`"
+                resource_name = resource.split(".")[1] if "." in resource else resource
+                hint = f'Look for `resource ... "{resource_name}"`'
 
             summary_lines.append(f"- **{resource}**")
             summary_lines.append(f"  - 💡 {hint}")
             summary_lines.append(f"  - ❌ {v['message']}")
 
-    summary = '\n'.join(summary_lines)
+    summary = "\n".join(summary_lines)
 
     # Print results
     print(f"\n📊 Violations: {violations_count}")
@@ -76,7 +79,7 @@ def main():
 
     # Write outputs
     if github_output:
-        with open(github_output, 'a') as f:
+        with open(github_output, "a") as f:
             f.write(f"violations_count={violations_count}\n")
             f.write(f"passed={str(passed).lower()}\n")
             f.write(f"violations_summary<<EOF\n{summary}\nEOF\n")
@@ -86,5 +89,5 @@ def main():
         exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
