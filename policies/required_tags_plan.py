@@ -2,17 +2,18 @@
 Custom Checkov policy to validate required tags on AWS resources in Terraform plan.
 This policy works with terraform_plan framework to see tags_all and module-created resources.
 """
-from checkov.terraform.checks.resource.base_resource_check import BaseResourceCheck
-from checkov.common.models.enums import CheckResult, CheckCategories
 import json
 import os
+
+from checkov.common.models.enums import CheckCategories, CheckResult
+from checkov.terraform.checks.resource.base_resource_check import BaseResourceCheck
 
 
 def load_required_tags():
     """Load required tags from config file."""
     config_path = os.path.join(os.path.dirname(__file__), '..', 'config.json')
     try:
-        with open(config_path, 'r') as f:
+        with open(config_path) as f:
             config = json.load(f)
             return config.get('required_tags', [])
     except Exception:

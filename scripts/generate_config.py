@@ -2,8 +2,8 @@
 """
 Generates Checkov custom policy configuration based on required tags input.
 """
-import os
 import json
+import os
 
 
 def parse_required_tags(tags_input: str) -> list:

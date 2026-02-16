@@ -2,9 +2,9 @@
 """
 Parses Checkov JSON output and generates GitHub Action outputs.
 """
-import os
-import json
 import glob
+import json
+import os
 
 
 def main():
@@ -19,7 +19,7 @@ def main():
 
     for json_file in json_files:
         try:
-            with open(json_file, 'r') as f:
+            with open(json_file) as f:
                 results = json.load(f)
 
             # Parse failed checks
