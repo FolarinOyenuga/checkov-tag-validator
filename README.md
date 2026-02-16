@@ -20,7 +20,21 @@ Untagged AWS resources cost organisations money and create compliance gaps. This
 - **Supports default_tags**: Works with AWS provider `default_tags` via `tags_all`
 - **Configurable**: Specify your own required tags or use MoJ defaults
 
+## How It Differs From Standard Checkov
+
+This action uses `terraform_plan` framework, not static file scanning. This means it can:
+
+| Capability | Standard Checkov | This Action |
+|------------|-----------------|-------------|
+| See `tags_all` (merged default_tags + resource tags) | ❌ | ✅ |
+| Validate module-created resources | ❌ | ✅ |
+| Detect whitespace-only tag values | ❌ | ✅ |
+
+**Note:** This action is designed to run alongside your existing Checkov workflows, not replace them. Standard Checkov handles security scanning; this action focuses specifically on tag enforcement.
+
 ## Quick Start
+
+Create `.github/workflows/validate-tags.yml`:
 
 ```yaml
 name: Validate Tags
@@ -36,12 +50,15 @@ permissions:
 
 jobs:
   validate-tags:
+    name: Tag Validation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
-      - uses: FolarinOyenuga/checkov-tag-validator@v1
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Tags
         id: validate
+        uses: FolarinOyenuga/checkov-tag-validator@v1
         with:
           terraform_directory: ./terraform
           required_tags: |
@@ -51,21 +68,24 @@ jobs:
             is-production
             service-area
             environment
+          soft_fail: false
 
-      # Optional: Post results as PR comment
-      - name: Post Validation Results
+      - name: Post Results to PR
         if: always() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         env:
           SUMMARY: ${{ steps.validate.outputs.violations_summary }}
+          PASSED: ${{ steps.validate.outputs.passed }}
         with:
           script: |
             const summary = process.env.SUMMARY || '✅ All resources have required tags';
+            const passed = process.env.PASSED === 'true';
+            const icon = passed ? '✅' : '⚠️';
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `## 🏷️ Checkov Tag Validation\n\n${summary}`
+              body: `## 🏷️ Tag Validation ${icon}\n\n${summary}`
             });
 ```
 
