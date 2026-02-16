@@ -19,7 +19,7 @@ def load_required_tags():
         # Default MoJ tags
         return [
             'business-unit',
-            'application', 
+            'application',
             'owner',
             'is-production',
             'service-area',
@@ -42,7 +42,7 @@ class RequiredTagsPlanCheck(BaseResourceCheck):
         """
         Check if resource has all required tags.
         Works with both static terraform files and terraform plan JSON.
-        
+
         In plan JSON, the structure is different:
         - conf contains the resource configuration from plan
         - tags_all contains merged default_tags + resource tags
@@ -51,28 +51,28 @@ class RequiredTagsPlanCheck(BaseResourceCheck):
         # Plan JSON format
         tags = None
         tags_all = None
-        
+
         # Direct tags attribute
         if isinstance(conf, dict):
             tags = conf.get('tags')
             tags_all = conf.get('tags_all')
-        
+
         # Handle list format from Checkov static scanning
         if isinstance(tags, list) and tags:
             tags = tags[0] if tags[0] else {}
         if isinstance(tags_all, list) and tags_all:
             tags_all = tags_all[0] if tags_all[0] else {}
-        
+
         # Skip resources without tags support (no tags or tags_all field at all)
         if tags is None and tags_all is None:
             return CheckResult.UNKNOWN
-        
+
         # Prefer tags_all (includes provider default_tags merged with resource tags)
         effective_tags = tags_all if tags_all else tags
-        
+
         if not isinstance(effective_tags, dict):
             effective_tags = {}
-        
+
         # Check for missing or empty tags
         missing = []
         for tag in REQUIRED_TAGS:
@@ -80,11 +80,11 @@ class RequiredTagsPlanCheck(BaseResourceCheck):
                 missing.append(tag)
             elif not effective_tags[tag] or str(effective_tags[tag]).strip() == '':
                 missing.append(f"{tag} (empty)")
-        
+
         if missing:
             self.details = f"Missing tags: {', '.join(missing)}"
             return CheckResult.FAILED
-        
+
         return CheckResult.PASSED
 
 
