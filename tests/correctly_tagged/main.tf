@@ -22,7 +22,7 @@ resource "aws_s3_bucket" "test" {
     tags = {
         business-unit = "HMPPS"
         application   = "test-app"
-        owner         = "test@example.com"
+        owner         = "testo@example.com"
         is-production = "false"
         service-area  = "testing"
     }
