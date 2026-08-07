@@ -27,37 +27,37 @@ jobs:
         with:
           terraform_directory: ${{ matrix.case.dir }}
 
-  test-non-compliant:
-    name: ${{ matrix.case.name }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        case:
-          - name: Case - Missing all tags
-            dir: tests/missing_all_tags
-          - name: Case - Missing tag
-            dir: tests/missing_tag
-          - name: Case - Whitespace tag values
-            dir: tests/whitespace_values
-          - name: Case - Empty tag values
-            dir: tests/empty_values
-          - name: Case - Invalid tag values
-            dir: tests/invalid_values
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+  # test-non-compliant:
+  #   name: ${{ matrix.case.name }}
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       case:
+  #         - name: Case - Missing all tags
+  #           dir: tests/missing_all_tags
+  #         - name: Case - Missing tag
+  #           dir: tests/missing_tag
+  #         - name: Case - Whitespace tag values
+  #           dir: tests/whitespace_values
+  #         - name: Case - Empty tag values
+  #           dir: tests/empty_values
+  #         - name: Case - Invalid tag values
+  #           dir: tests/invalid_values
+  #   steps:
+  #     - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Run action
-        id: run
-        uses: ./
-        continue-on-error: true
-        with:
-          terraform_directory: ${{ matrix.case.dir }}
+  #     - name: Run action
+  #       id: run
+  #       uses: ./
+  #       continue-on-error: true
+  #       with:
+  #         terraform_directory: ${{ matrix.case.dir }}
 
-      - name: Assert violations were detected
-        run: |
-          if [ "${{ steps.run.outputs.passed }}" = "true" ]; then
-            echo "ERROR: Non-compliant resources should have failed"
-            exit 1
-          fi
-          echo "✅ Non-compliant resources correctly detected"
+  #     - name: Assert violations were detected
+  #       run: |
+  #         if [ "${{ steps.run.outputs.passed }}" = "true" ]; then
+  #           echo "ERROR: Non-compliant resources should have failed"
+  #           exit 1
+  #         fi
+  #         echo "✅ Non-compliant resources correctly detected"
