@@ -1,0 +1,52 @@
+---
+name: Snyk
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 0 * * 1" # Weekly Monday midnight UTC
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  snyk-python:
+    name: Snyk Python
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Scan Python dependencies
+        id: scan
+        continue-on-error: true
+        uses: snyk/actions/python@9adf32b1121593767fc3c057af55b55db032dc04 # v1.0.0
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --fail-on=upgradable --file=requirements.txt --sarif-file-output=snyk-python.sarif
+
+      - name: Check for SARIF file
+        id: sarif
+        if: always() && steps.scan.outcome != 'skipped'
+        run: echo "exists=$([ -f snyk-python.sarif ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload SARIF
+        if: always() && steps.sarif.outputs.exists == 'true'
+        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
+        with:
+          sarif_file: snyk-python.sarif
+          category: snyk-python
+
+      - name: Fail on findings
+        if: steps.scan.outcome == 'failure'
+        run: exit 1

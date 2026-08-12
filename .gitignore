@@ -7,3 +7,4 @@ tfplan.json
 **/tfplan.json
 _tag_check_backend_override.tf
 .terraform.tfstate*
+.DS_Store
