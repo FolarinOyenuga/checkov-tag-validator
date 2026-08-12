@@ -1,0 +1,15 @@
+# Snyk (https://snyk.io) policy file
+version: v1.25.1
+ignore:
+  SNYK-PYTHON-ECDSA-6184115:
+    - "*":
+        reason: No fixed version; transitive via checkov; maintainers will not patch
+        expires: 2027-08-12T00:00:00.000Z
+  SNYK-PYTHON-ECDSA-6219992:
+    - "*":
+        reason: No fixed version; transitive via checkov; maintainers will not patch
+        expires: 2027-08-12T00:00:00.000Z
+  SNYK-PYTHON-PLY-15046763:
+    - "*":
+        reason: No fixed version; transitive via checkov (bc-jsonpath-ng)
+        expires: 2027-08-12T00:00:00.000Z
