@@ -1,1 +1,2 @@
-checkov==3.3.8
+checkov==3.3.10
+aiohttp==3.14.3
