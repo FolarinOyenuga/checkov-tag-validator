@@ -89,8 +89,10 @@ runs:
       uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88
       with:
         recreate: true
-        header: tag-validation-results
+        header: tag-validation-results-${{ inputs.terraform_workspace }}
         message: |
+          **${{ inputs.terraform_workspace }}**
+
           ${{ steps.parse-results.outputs.violations_summary }}
 
     - name: Fail workflow if Checkov failed
